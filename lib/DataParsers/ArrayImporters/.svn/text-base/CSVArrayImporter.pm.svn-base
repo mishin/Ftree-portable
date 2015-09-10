@@ -1,3 +1,5 @@
+#!/usr/bin/perl -Tw
+
 #######################################################
 #
 # Family Tree generation program, v2.0
@@ -20,32 +22,34 @@
 #
 #######################################################
 
-package Place;
-
+package CSVArrayImporter;
 use strict;
 use warnings;
-
-use version; our $VERSION = qv('2.3.19');
-
 use Params::Validate qw(:all);
 
 sub new {
-  my ( $classname, $country, $city) = @_;
-  my $self = {
-     country => $country,
-     city => $city,     
+    my ($classname, $file_name) = @_;
+	my $self = {
+    	current_line => undef,
   };
+  open DATAFILE, "< $file_name" or return 0;
+  $self->{current_line} = <DATAFILE>;
   return bless $self, $classname;
 }
-
- sub toString {
- 	  my ( $self) = validate_pos(@_, HASHREF);
- 	  if(defined $self->{city}) {
- 	  	return defined $self->{city} ? "$self->{city} ($self->{country})" : $self->{country}; 
- 	  }
- 	  else {
- 	  	return defined $self->{country} ? $self->{country} : "";
- 	  }
- }
-
+sub hasNext {
+	my ($self) = validate_pos(@_, {type => HASHREF});
+	return $self->{current_line};
+}
+sub next {
+	my ($self) = validate_pos(@_, {type => HASHREF});
+	my $prevline = $self->{current_line};
+	$self->{current_line} = <DATAFILE>;
+	chomp($prevline); 
+	return split( /;/, $prevline);
+}
+sub close {
+	my ($self) = validate_pos(@_, {type => HASHREF});
+	close(DATAFILE);
+}
+ 
 1;
